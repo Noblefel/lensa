@@ -18,35 +18,33 @@ type Render struct {
 	//TODO: FuncMap
 }
 
-// Creates Render with default values
+// Creates Render with default values. Throws panic if there's path error.
 //
 // Directory for pages (index, dashboard etc)  must be "pages"
 //
 // Directory for parts (components, layout etc) must be "partials"
 //
 // File extension for templates must be ".tpl"
-func Default() *Render {
-	return &Render{"pages", "partials", ".tpl", nil}
-}
+func Default() *Render { return New("pages", "partials", ".tpl") }
 
-// Creates Render with custom values
+// Creates Render with custom values. Throws panic if there's path error.
 func New(pagesDir, partsDir, ext string) *Render {
+	// assert
+	if _, err := glob(pagesDir, ext); err != nil {
+		panic(err)
+	}
+	if _, err := glob(partsDir, ext); err != nil {
+		panic(err)
+	}
 	return &Render{pagesDir, partsDir, ext, nil}
 }
 
-// Parse all pages into cache. Throw panic if error
+// Parse all pages into cache
 func (r *Render) UseCache() {
 	r.cache = make(map[string]*template.Template)
 
-	pages, err := glob(r.pagesDir, r.ext)
-	if err != nil {
-		panic(err)
-	}
-
-	parts, err := glob(r.partsDir, r.ext)
-	if err != nil {
-		panic(err)
-	}
+	pages, _ := glob(r.pagesDir, r.ext) // assert already done in New()
+	parts, _ := glob(r.partsDir, r.ext)
 
 	for _, p := range pages {
 		files := append([]string{p}, parts...)
