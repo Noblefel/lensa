@@ -15,7 +15,7 @@ type Render struct {
 	ext      string // template file extension.
 
 	cache map[string]*template.Template // the store for UseCache
-	//TODO: FuncMap
+	funcs *template.FuncMap
 }
 
 // Creates Render with default values. Throws panic if there's path error.
@@ -25,10 +25,10 @@ type Render struct {
 // Directory for parts (components, layout etc) must be "partials"
 //
 // File extension for templates must be ".tpl"
-func Default() *Render { return New("pages", "partials", ".tpl") }
+func Default() *Render { return New("pages", "partials", ".tpl", nil) }
 
 // Creates Render with custom values. Throws panic if there's path error.
-func New(pagesDir, partsDir, ext string) *Render {
+func New(pagesDir, partsDir, ext string, funcs template.FuncMap) *Render {
 	// assert
 	if _, err := glob(pagesDir, ext); err != nil {
 		panic(err)
@@ -36,13 +36,12 @@ func New(pagesDir, partsDir, ext string) *Render {
 	if _, err := glob(partsDir, ext); err != nil {
 		panic(err)
 	}
-	return &Render{pagesDir, partsDir, ext, nil}
+	return &Render{pagesDir, partsDir, ext, nil, nil}
 }
 
 // Parse all pages into cache
 func (r *Render) UseCache() {
 	r.cache = make(map[string]*template.Template)
-
 	pages, _ := glob(r.pagesDir, r.ext) // assert already done in New()
 	parts, _ := glob(r.partsDir, r.ext)
 
@@ -53,7 +52,9 @@ func (r *Render) UseCache() {
 		if err != nil {
 			panic(err)
 		}
-
+		if r.funcs != nil {
+			t = t.Funcs(*r.funcs)
+		}
 		r.cache[p] = t
 	}
 }
@@ -68,7 +69,6 @@ func (r *Render) View(w io.Writer, page string, data any) error {
 		if !ok {
 			return errors.New("no template found")
 		}
-
 		return write(w, t, data)
 	}
 
@@ -83,27 +83,25 @@ func (r *Render) View(w io.Writer, page string, data any) error {
 	if err != nil {
 		return err
 	}
-
+	if r.funcs != nil {
+		t = t.Funcs(*r.funcs)
+	}
 	return write(w, t, data)
 }
 
 func glob(root, ext string) ([]string, error) {
 	var files []string
-
 	walk := func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-
 		n := info.Name()
 		// this is just HasSuffix
 		if len(n) >= len(ext) && n[len(n)-len(ext):] == ext {
 			files = append(files, path)
 		}
-
 		return nil
 	}
-
 	return files, filepath.Walk(root, walk)
 }
 
