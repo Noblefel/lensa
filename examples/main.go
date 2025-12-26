@@ -23,5 +23,5 @@ func main() {
 		render.View(w, "dashboard", nil)
 	})
 
-	http.ListenAndServe(":8080", mux)
+	http.ListenAndServe("localhost:8080", mux)
 }

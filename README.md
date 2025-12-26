@@ -1,12 +1,10 @@
-A wrapper around go html/template to skip the tedious parsing part. Not recommended
-
-**THIS IS MOSTLY UNTESTED, SO DONT USE IT 😁**
+A wrapper around go html/template to skip the tedious parsing part. Not recommended.
 
 ```
 go get github.com/Noblefel/lensa
 ```
 
-Quick example writes to standard output (see examples):
+Quick example that writes to standard output (see examples):
 
 ```go
 func main() {
@@ -41,4 +39,4 @@ For caching, simply use UseCache function:
     render.UseCache() // <-- should be done once after creation
 ```
 
-**Warning** - make sure you separate the templates for pages (like index, dashboard etc) and templates for parts (layout, components) in their own directory.
+**Warning** - make sure to separate the templates for pages (like index, dashboard etc) and templates for parts (layout, components) in their own directory.
